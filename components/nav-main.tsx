@@ -34,7 +34,7 @@ export function NavMain({ items }: { items: NavMainProps[] }) {
           <SidebarMenuItem key={i}>
             <SidebarMenuButton
               tooltip={item.title}
-              isActive={pathname.startsWith(item.url)}
+              isActive={pathname.split("/").slice(0, 3).join("/") == item.url}
               onClick={() => navigate.push(item.url)}
             >
               {item.icon && <item.icon />}
