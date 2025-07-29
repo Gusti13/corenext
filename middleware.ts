@@ -8,5 +8,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ['/dashboard/:path*'], // <-- tambahkan path yang ingin dilindungi
+  matcher: ['/dashboard/:path*', '/api/:path*'], // <-- tambahkan path yang ingin dilindungi
 };
