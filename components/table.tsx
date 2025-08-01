@@ -1,6 +1,6 @@
 "use client";
 import { useQueryHelpers } from "@/hooks/use-query-helpers";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Minus } from "lucide-react";
 import React from "react";
 
 export const IconSort = ({ value }: { value: string }) => {
@@ -78,9 +78,12 @@ interface IColumn<T> {
 interface TableProps<T> {
   columns: IColumn<T>[];
   datas: T[];
+  isLoading?: boolean;
 }
 
 export function Table<T>(props: TableProps<T>) {
+  const isEmpty = !props?.datas || props.datas.length === 0;
+
   return (
     <div className="rounded-md border bg-card text-card-foreground py-1 px-1">
       <div className="relative w-full max-h-[60vh] overflow-auto">
@@ -97,24 +100,57 @@ export function Table<T>(props: TableProps<T>) {
             </tr>
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
-            {props.datas?.map((data, i) => {
-              return (
-                <tr
-                  key={i}
-                  className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted even:bg-accent/25"
-                  data-state="false"
-                >
-                  {props.columns?.map((item, i) => (
-                    <TableRow key={i}>
-                      <>{item.render ? item.render(data) : data[item.key]}</>
-                    </TableRow>
-                  ))}
-                </tr>
-              );
-            })}
+            {props.isLoading ? (
+              <TableLoader />
+            ) : isEmpty ? (
+              <TableEmpty />
+            ) : (
+              props.datas?.map((data, i) => {
+                return (
+                  <tr
+                    key={i}
+                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted even:bg-accent/25"
+                    data-state="false"
+                  >
+                    {props.columns?.map((item, i) => (
+                      <TableRow key={i}>
+                        <>{item.render ? item.render(data) : data[item.key]}</>
+                      </TableRow>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
+export const TableLoader = () => {
+  return (
+    <tr>
+      <td colSpan={1000} className="text-center py-10">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="mt-2 text-sm text-muted-foreground">
+          Loading data...
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+export const TableEmpty = ({
+  message = "No data found.",
+}: {
+  message?: string;
+}) => {
+  return (
+    <tr>
+      <td colSpan={1000} className="text-center py-10">
+        <div className="text-muted-foreground text-sm">{message}</div>
+      </td>
+    </tr>
+  );
+};
