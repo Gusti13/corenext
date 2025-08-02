@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { UserIcon, Loader2, Shield } from "lucide-react";
+import { UserIcon, Loader2, Shield, ShieldOff } from "lucide-react";
 import * as z from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -32,6 +32,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     <div className="space-y-8 py-8">
       {data && <UserDetail data={data} />}{" "}
       {data && <ChangePassword data={data} />}
+      {data && <DeleteAccount data={data} />}
     </div>
   );
 }
@@ -113,7 +114,11 @@ export function UserDetail(props: UserDetailProps) {
           </div>
 
           <div className="pt-6 flex gap-2 justify-end">
-            <Button type="button" variant="outline" disabled={mutation.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={mutation.isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
@@ -202,7 +207,9 @@ export function ChangePassword({ data }: ChangePasswordProps) {
               <Label htmlFor="password">New Password</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && (
-                <small className="text-red-500">{errors.password.message}</small>
+                <small className="text-red-500">
+                  {errors.password.message}
+                </small>
               )}
             </div>
 
@@ -214,17 +221,26 @@ export function ChangePassword({ data }: ChangePasswordProps) {
                 {...register("confirmPassword")}
               />
               {errors.confirmPassword && (
-                <small className="text-red-500">{errors.confirmPassword.message}</small>
+                <small className="text-red-500">
+                  {errors.confirmPassword.message}
+                </small>
               )}
             </div>
           </div>
 
           <div className="pt-6 flex gap-2 justify-end">
-            <Button variant="outline" type="button" onClick={() => reset()} disabled={mutation.isPending}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => reset()}
+              disabled={mutation.isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+              {mutation.isPending && (
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              )}
               Save Changes
             </Button>
           </div>
@@ -235,3 +251,110 @@ export function ChangePassword({ data }: ChangePasswordProps) {
 }
 
 // ============ End Password Setting section ================ ///
+
+// ============ Start Delete aaccount section ================ ///
+
+interface DeleteAccountProps {
+  data: User;
+}
+
+export function DeleteAccount({ data }: DeleteAccountProps) {
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/users/${data.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete account");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["/api/users", data.id] });
+      toast.success("Account deleted successfully.");
+      window.location.href = "/"; // Or redirect somewhere else
+    },
+    onError: () => {
+      toast.error("Failed to delete account.");
+    },
+  });
+
+  const handleConfirmDelete = () => {
+    if (inputValue !== data.username) {
+      toast.error("Username doesn't match. Cannot delete.");
+      return;
+    }
+
+    mutation.mutate();
+  };
+
+  return (
+    <Card className="w-full max-w-lg mx-auto shadow-none">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-red-600">
+          <ShieldOff className="w-5 h-5" />
+          Delete Account
+        </CardTitle>
+      </CardHeader>
+      <Separator />
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">
+          Deleting your account is permanent and cannot be undone. Please type{" "}
+          <span className="font-semibold">{data.username}</span> to confirm.
+        </p>
+
+        {!confirming ? (
+          <Button
+            variant="destructive"
+            onClick={() => setConfirming(true)}
+            className="w-full"
+          >
+            Delete Account
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-1">
+              <Label htmlFor="usernameConfirm">Confirm Username</Label>
+              <Input
+                id="usernameConfirm"
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type your username"
+                disabled={mutation.isPending}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConfirming(false);
+                  setInputValue("");
+                }}
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={mutation.isPending || inputValue !== data.username}
+              >
+                {mutation.isPending && (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                )}
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============ End Delete aaccount section ================ ///
