@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+type ContextType = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, context: ContextType) {
+  const { id } = await context.params;
   const user = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     select: { id: true, username: true, name: true },
   });
 
@@ -15,10 +15,8 @@ export async function GET(
   return NextResponse.json(user);
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, context: ContextType) {
+  const { id } = await context.params;
   const body = await req.json();
   const { username, password, name } = body;
 
@@ -28,19 +26,17 @@ export async function PUT(
   if (password) data.password = await bcrypt.hash(password, 10);
 
   const updated = await prisma.user.update({
-    where: { id: params.id },
+    where: { id: id },
     data,
   });
 
   return NextResponse.json(updated);
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, context: ContextType) {
+  const { id } = await context.params;
   await prisma.user.delete({
-    where: { id: params.id },
+    where: { id: id },
   });
 
   return NextResponse.json({ message: "Deleted" });

@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ResponseList } from "@/lib/prisma";
+import Link from "next/link";
 
 export default function Page() {
   const searchParams = useSearchParams();
@@ -42,44 +43,36 @@ export default function Page() {
   });
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
-        <div className="min-h-screen pt-12 transition-all ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:pt-12">
-          <div className="p-4 space-y-4">
-            <div className="flex justify-between">
-              <SearchInputQuery />
-              <AddUser />
-            </div>
-            <Table<User>
-              isLoading={isLoading}
-              columns={[
-                {
-                  label: "Name",
-                  key: "name",
-                  render: (obj) => (
-                    <a
-                      href="#"
-                      className="cursor-pointer flex items-center gap-2 text-sm hover:underline"
-                    >
-                      <UserIcon className="w-4 h-4 stroke-green-600 dark:stroke-green-500" />
-                      {obj.name}
-                    </a>
-                  ),
-                },
-                {
-                  label: "Username",
-                  key: "username",
-                },
-              ]}
-              datas={data?.data || []}
-            />
-            <PaginationQuery pageTotal={data?.totalPages || 1} />
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between">
+        <SearchInputQuery />
+        <AddUser />
+      </div>
+      <Table<User>
+        isLoading={isLoading}
+        columns={[
+          {
+            label: "Name",
+            key: "name",
+            render: (obj) => (
+              <Link
+                href={"/dashboard/users/" + obj.id}
+                className="cursor-pointer flex items-center gap-2 text-sm hover:underline"
+              >
+                <UserIcon className="w-4 h-4 stroke-green-600 dark:stroke-green-500" />
+                {obj.name}
+              </Link>
+            ),
+          },
+          {
+            label: "Username",
+            key: "username",
+          },
+        ]}
+        datas={data?.data || []}
+      />
+      <PaginationQuery pageTotal={data?.totalPages || 1} />
+    </div>
   );
 }
 
