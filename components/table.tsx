@@ -101,9 +101,9 @@ export function Table<T>(props: TableProps<T>) {
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
             {props.isLoading ? (
-              <TableLoader />
+              <TableLoader col={props.columns.length} />
             ) : isEmpty ? (
-              <TableEmpty />
+              <TableEmpty col={props.columns.length} />
             ) : (
               props.datas?.map((data, i) => {
                 return (
@@ -128,10 +128,14 @@ export function Table<T>(props: TableProps<T>) {
   );
 }
 
-export const TableLoader = () => {
+interface TableLoaderProps {
+  col: number;
+}
+
+export const TableLoader = ({ col }: TableLoaderProps) => {
   return (
     <tr>
-      <td colSpan={1000} className="text-center py-10">
+      <td colSpan={col} className="text-center py-10">
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
         <div className="mt-2 text-sm text-muted-foreground">
           Loading data...
@@ -141,14 +145,18 @@ export const TableLoader = () => {
   );
 };
 
+interface TableEmptyProps {
+  col: number;
+  message?: string;
+}
+
 export const TableEmpty = ({
   message = "No data found.",
-}: {
-  message?: string;
-}) => {
+  col,
+}: TableEmptyProps) => {
   return (
     <tr>
-      <td colSpan={1000} className="text-center py-10">
+      <td colSpan={col} className="text-center py-10">
         <div className="text-muted-foreground text-sm">{message}</div>
       </td>
     </tr>
