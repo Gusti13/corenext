@@ -5,7 +5,6 @@ import { PaginationQuery } from "@/components/pagination-query";
 import { SearchInputQuery } from "@/components/search-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle, User as UserIcon } from "lucide-react";
-import { User } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 import {
@@ -25,16 +24,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ResponseList } from "@/lib/prisma";
 import Link from "next/link";
+import { Group } from "@prisma/client";
 
 export default function Page() {
   const searchParams = useSearchParams();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/users", searchParams.toString()],
-    queryFn: async (): Promise<ResponseList<User[]>> => {
+    queryKey: ["/api/groups", searchParams.toString()],
+    queryFn: async (): Promise<ResponseList<Group[]>> => {
       // Ambil semua query dari URL dan teruskan ke API
       const queryString = searchParams.toString();
-      const res = await fetch(`/api/users?${queryString}`);
+      const res = await fetch(`/api/groups?${queryString}`);
       return await res.json();
     },
   });
@@ -43,9 +43,9 @@ export default function Page() {
     <div className="p-4 space-y-4">
       <div className="flex justify-between">
         <SearchInputQuery />
-        <AddUser />
+        <CreateNew />
       </div>
-      <Table<User>
+      <Table<Group>
         isLoading={isLoading}
         columns={[
           {
@@ -53,7 +53,7 @@ export default function Page() {
             key: "name",
             render: (obj) => (
               <Link
-                href={"/dashboard/users/" + obj.id}
+                href={"/dashboard/groups/" + obj.id}
                 className="cursor-pointer flex items-center gap-2 text-sm hover:underline"
               >
                 <UserIcon className="w-4 h-4 stroke-green-600 dark:stroke-green-500" />
@@ -62,8 +62,9 @@ export default function Page() {
             ),
           },
           {
-            label: "Username",
-            key: "username",
+            label: "Created At",
+            key: "created_at",
+            render: (obj) => `${obj.created_at}`,
           },
         ]}
         datas={data?.data || []}
@@ -75,26 +76,24 @@ export default function Page() {
 
 const schema = z.object({
   name: z.string().nonempty("Name is required"),
-  username: z.string().nonempty("Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type UserType = z.input<typeof schema>;
 
-export const AddUser = () => {
+export const CreateNew = () => {
   const queryClient = useQueryClient();
   const { handleSubmit, register, formState } = useForm({
     resolver: zodResolver(schema),
   });
   const mutation = useMutation<Response, Error, UserType>({
     mutationFn: (data) => {
-      return fetch("/api/users", {
+      return fetch("/api/groups", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       toast.success("User has been created.");
     },
     onError: () => {
@@ -110,7 +109,7 @@ export const AddUser = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button>
-          Add user <PlusCircle />
+          Create New <PlusCircle />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -128,24 +127,6 @@ export const AddUser = () => {
                 </small>
               )}
             </div>
-            <div className="grid gap-1">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" type="text" {...register("username")} />
-              {formState.errors.username && (
-                <small className="text-red-500">
-                  {formState.errors.username.message}
-                </small>
-              )}
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register("password")} />
-              {formState.errors.password && (
-                <small className="text-red-500">
-                  {formState.errors.password.message}
-                </small>
-              )}
-            </div>
           </div>
           <DialogFooter className="mt-4">
             <DialogClose asChild>
@@ -155,7 +136,7 @@ export const AddUser = () => {
             </DialogClose>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending && <Loader2 className="animate-spin" />}
-              Save changes
+              Save
             </Button>
           </DialogFooter>
         </form>

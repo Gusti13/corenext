@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AppWindow, GalleryVerticalEnd, Home, Server, User } from "lucide-react";
+import { AppWindow, GalleryVerticalEnd, Home, Server, Shield, User } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import {
@@ -32,6 +32,11 @@ const data = {
       title: "Nginx",
       url: "#",
       icon: Server,
+    },
+    {
+      title: "Groups",
+      url: "/dashboard/groups",
+      icon: Shield,
     },
     {
       title: "Users",
